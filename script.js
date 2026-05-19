@@ -31,14 +31,18 @@ window.addEventListener("DOMContentLoaded", () => {
       const json = JSON.parse(text.substring(47).slice(0, -2));
       const rows = json.table.rows;
 
-      const data = rows.map(r => ({
-        date: r.c[0]?.f,
-        location: r.c[1]?.v,
-        casts: [r.c[2]?.v, r.c[3]?.v, r.c[4]?.v].filter(Boolean)
-      }));
+const data = rows.map(r => ({
+  date: r.c[0]?.f,
+  location: r.c[1]?.v,
+  casts: [r.c[2]?.v, r.c[3]?.v, r.c[4]?.v].filter(Boolean)
+}));
 
-      const todayData = data.filter(d => d.date === today);
+console.log("DATA:", data);
 
+const todayData = data.filter(d => d.date === today);
+
+console.log("TODAY:", today);
+console.log("TODAY DATA:", todayData);
       if (!todayData.length) {
         area.innerHTML = "<p>No cast today</p>";
         return;
