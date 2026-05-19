@@ -1,5 +1,5 @@
 const CAST_DICT = {
-  Maaya: "https://canva.link/clmjrfp7c16oz5g",
+  Maaya: "https://www.canva.com/design/DAHKEvpK2hk/pFVKh--tI0O1TqFShAN6tA/view",
   Nako: "https://www.canva.com/design/DAHKEj4Qwf0/BpbRYJCz2i66K8OdyhcLcA/view?embed",
   Hono: "https://www.canva.com/design/DAHKEhBRJws/HTyusJhLG7ZV0EdGPkORGg/view?embed",
   Yu: "https://www.canva.com/design/DAHKEqQ7D1U/q9OnBGdS0_5P-hdb5xSJKw/view?embed"
