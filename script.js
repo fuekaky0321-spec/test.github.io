@@ -8,6 +8,15 @@ const CAST_DICT = {
 // 今日の日付
 const today = new Date().toISOString().split("T")[0];
 
+const normalize = (v) => {
+  if (!v) return "";
+  return new Date(v).toISOString().split("T")[0];
+};
+
+const todayData = data.filter(d =>
+  normalize(d.date) === today
+);
+
 const SHEET_URL =
   "https://docs.google.com/spreadsheets/d/1wJrWj4cK01nAZmx9hFQJsml3Za77jlADrGAmyOfqfBM/gviz/tq?tqx=out:json";
 
