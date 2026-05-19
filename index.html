@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Cast Schedule</title>
 
   <style>
@@ -9,28 +9,58 @@
       font-family: sans-serif;
       margin: 0;
       padding: 20px;
-      background: #f7f7f7;
+      background: #f5f5f5;
     }
 
-    #schedule-area {
-      margin-top: 30px;
+    .container {
+      max-width: 420px;
+      margin: 0 auto;
+      text-align: center;
     }
 
-    .location-block {
+    .btn {
+      margin-bottom: 20px;
+      padding: 14px 32px;
+      border: none;
+      border-radius: 9999px;
+      background: #facc15;
+      color: #1a1a2e;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .canva {
+      position: relative;
+      width: 100%;
+      height: 0;
+      padding-top: 506px;
       margin-bottom: 30px;
-      padding: 16px;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .canva iframe {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border: none;
+      top: 0;
+      left: 0;
+    }
+
+    .block {
       background: #fff;
+      padding: 16px;
+      margin-top: 20px;
       border-radius: 12px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
-    .cast {
-      margin-top: 15px;
-    }
-
-    iframe {
+    iframe.cast {
       width: 100%;
-      height: 400px;
+      height: 380px;
       border: none;
       border-radius: 8px;
     }
@@ -39,46 +69,67 @@
 
 <body>
 
-<h1>Today's Cast</h1>
+<div class="container">
 
-<div id="schedule-area"></div>
+  <!-- ■ ボタン（固定表示） -->
+  <button class="btn" onclick="location.href='test.html'">
+    Cast Profile
+  </button>
+
+  <!-- ■ Canva（固定表示・絶対消えない） -->
+  <div class="canva">
+    <iframe
+      src="https://www.canva.com/design/DAHKEaNpDjg/VR-hxetK9ajQ0uzNjJ10yQ/view?embed"
+      allowfullscreen>
+    </iframe>
+  </div>
+
+  <!-- ■ 今日のキャスト -->
+  <div id="schedule-area"></div>
+
+</div>
 
 <script>
 
 const CAST_DICT = {
-  "MAAYA": "https://www.canva.com/design/DAHKEvpK2hk/pFVKh--tI0O1TqFShAN6tA/view",
-  "NAKO": "https://www.canva.com/design/DAHKEj4Qwf0/BpbRYJCz2i66K8OdyhcLcA/view",
-  "HONO": "https://www.canva.com/design/DAHKEhBRJws/HTyusJhLG7ZV0EdGPkORGg/view",
-  "YU": "https://www.canva.com/design/DAHKEqQ7D1U/q9OnBGdS0_5P-hdb5xSJKw/view"
+  MAAYA: "https://www.canva.com/design/DAHKEvpK2hk/pFVKh--tI0O1TqFShAN6tA/view?embed",
+  NAKO: "https://www.canva.com/design/DAHKEj4Qwf0/BpbRYJCz2i66K8OdyhcLcA/view?embed",
+  HONO: "https://www.canva.com/design/DAHKEhBRJws/HTyusJhLG7ZV0EdGPkORGg/view?embed",
+  YU: "https://www.canva.com/design/DAHKEqQ7D1U/q9OnBGdS0_5P-hdb5xSJKw/view?embed"
 };
 
-// ★ 今日の日付（スプシと完全一致させる）
+// 今日（固定フォーマット）
 const today = new Date().toISOString().split("T")[0];
 
-// ★ Google Sheets（gviz）
 const SHEET_URL =
   "https://docs.google.com/spreadsheets/d/1wJrWj4cK01nAZmx9hFQJsml3Za77jlADrGAmyOfqfBM/gviz/tq?tqx=out:json";
 
 fetch(SHEET_URL)
-  .then(res => res.text())
+  .then(r => r.text())
   .then(text => {
 
-    // gvizの余計なラッパー削除
-    const json = JSON.parse(text.substring(47).slice(0, -2));
-    const rows = json.table.rows;
+    let json;
+    try {
+      json = JSON.parse(text.substring(47).slice(0, -2));
+    } catch (e) {
+      document.getElementById("schedule-area").innerHTML =
+        "<p>データ取得エラー</p>";
+      return;
+    }
 
-    // データ整形（超シンプル）
+    const rows = json.table.rows || [];
+
     const data = rows.map(r => ({
       date: r.c[0]?.v,
       location: r.c[1]?.v,
       casts: [r.c[2]?.v, r.c[3]?.v, r.c[4]?.v].filter(Boolean)
     }));
 
-    // 今日だけ抽出
     const todayData = data.filter(d => d.date === today);
 
     const area = document.getElementById("schedule-area");
 
+    // ■ データなしでも画面は壊さない
     if (todayData.length === 0) {
       area.innerHTML = "<p>No cast today</p>";
       return;
@@ -87,23 +138,18 @@ fetch(SHEET_URL)
     todayData.forEach(loc => {
 
       const block = document.createElement("div");
-      block.className = "location-block";
+      block.className = "block";
 
       let html = `<h2>${loc.location}</h2>`;
 
       loc.casts.forEach(name => {
 
-        const url = CAST_DICT[name];
-
-        if (!url) {
-          html += `<p>${name}（未登録）</p>`;
-          return;
-        }
+        const url = CAST_DICT[name?.toUpperCase()?.trim()];
 
         html += `
-          <div class="cast">
+          <div style="margin-top:15px;">
             <h3>${name}</h3>
-            <iframe src="${url}"></iframe>
+            ${url ? `<iframe class="cast" src="${url}"></iframe>` : "<p>未登録</p>"}
           </div>
         `;
       });
@@ -113,10 +159,9 @@ fetch(SHEET_URL)
     });
 
   })
-  .catch(err => {
-    console.error(err);
+  .catch(() => {
     document.getElementById("schedule-area").innerHTML =
-      "<p>データ取得に失敗しました</p>";
+      "<p>通信エラー</p>";
   });
 
 </script>
