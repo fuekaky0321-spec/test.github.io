@@ -1,71 +1,47 @@
-<div
-  style="
-    position: relative;
-    width: 100%;
-    max-width: 420px;
-    margin: 0 auto;
-    text-align: center;
-  "
->
-  <!-- Button -->
-  <button
-    id="cast-btn"
-    onclick="window.location.href='test.html'"
-    style="
-      margin-bottom: 1.2em;
-      padding: 14px 32px;
-      border: none;
-      border-radius: 9999px;
-      background-color: #facc15;
-      color: #1a1a2e;
-      font-size: 18px;
-      font-weight: bold;
-      font-family: 'DM Sans', sans-serif;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      cursor: pointer;
-      transition: transform 0.2s ease;
-    "
-    onmouseover="this.style.transform='scale(1.05)'"
-    onmouseout="this.style.transform='scale(1)'"
-  >
-    Cast Profile
-  </button>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Cast Schedule</title>
 
-  <!-- Canva Embed -->
-  <div
-    style="
-      position: relative;
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f7f7f7;
+    }
+
+    #schedule-area {
+      margin-top: 30px;
+    }
+
+    .location-block {
+      margin-bottom: 30px;
+      padding: 16px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .cast {
+      margin-top: 15px;
+    }
+
+    iframe {
       width: 100%;
-      height: 0;
-      padding-top: 506.0029%;
-      padding-bottom: 0;
-      box-shadow: 0 2px 8px 0 rgba(63, 69, 81, 0.16);
-      overflow: hidden;
+      height: 400px;
+      border: none;
       border-radius: 8px;
-      will-change: transform;
-    "
-  >
-    <iframe
-      loading="lazy"
-      style="
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        top: 0;
-        left: 0;
-        border: none;
-        padding: 0;
-        margin: 0;
-      "
-      src="https://www.canva.com/design/DAHKEaNpDjg/VR-hxetK9ajQ0uzNjJ10yQ/view?embed"
-      allowfullscreen="allowfullscreen"
-      allow="fullscreen"
-    >
-    </iframe>
-  </div>
-</div>
+    }
+  </style>
+</head>
 
-<div id="schedule-area" style="margin-top:40px;"></div>
+<body>
+
+<h1>Today's Cast</h1>
+
+<div id="schedule-area"></div>
 
 <script>
 
@@ -73,122 +49,77 @@ const CAST_DICT = {
   "MAAYA": "https://www.canva.com/design/DAHKEvpK2hk/pFVKh--tI0O1TqFShAN6tA/view",
   "NAKO": "https://www.canva.com/design/DAHKEj4Qwf0/BpbRYJCz2i66K8OdyhcLcA/view",
   "HONO": "https://www.canva.com/design/DAHKEhBRJws/HTyusJhLG7ZV0EdGPkORGg/view",
-  "YU": "https://www.canva.com/design/DAHKEqQ7D1U/q9OnBGdS0_5P-hdb5xSJKw/view",
+  "YU": "https://www.canva.com/design/DAHKEqQ7D1U/q9OnBGdS0_5P-hdb5xSJKw/view"
 };
 
+// ★ 今日の日付（スプシと完全一致させる）
+const today = new Date().toISOString().split("T")[0];
 
-
-// ★ 日付フォーマット統一関数（ここが重要）
-function normalizeDate(value) {
-  if (!value) return null;
-
-  const d = new Date(value);
-
-  if (!isNaN(d.getTime())) {
-    return d.toLocaleDateString("sv-SE", {
-      timeZone: "Asia/Tokyo"
-    });
-  }
-
-  return value.toString().replace(/\//g, "-");
-}
-
-
-
-// 今日の日付（統一済み）
-const today = normalizeDate(
-  new Date().toLocaleDateString("sv-SE", {
-    timeZone: "Asia/Tokyo"
-  })
-);
-
-
-
+// ★ Google Sheets（gviz）
 const SHEET_URL =
   "https://docs.google.com/spreadsheets/d/1wJrWj4cK01nAZmx9hFQJsml3Za77jlADrGAmyOfqfBM/gviz/tq?tqx=out:json";
-
-
 
 fetch(SHEET_URL)
   .then(res => res.text())
   .then(text => {
 
-    // Google特有の余計なラッパー削除
+    // gvizの余計なラッパー削除
     const json = JSON.parse(text.substring(47).slice(0, -2));
-
     const rows = json.table.rows;
 
-    // データ整形（ここで日付も統一）
+    // データ整形（超シンプル）
     const data = rows.map(r => ({
-      date: normalizeDate(r.c[0]?.v),
+      date: r.c[0]?.v,
       location: r.c[1]?.v,
       casts: [r.c[2]?.v, r.c[3]?.v, r.c[4]?.v].filter(Boolean)
     }));
 
-
-
     // 今日だけ抽出
     const todayData = data.filter(d => d.date === today);
 
-
-
     const area = document.getElementById("schedule-area");
-
-
 
     if (todayData.length === 0) {
       area.innerHTML = "<p>No cast today</p>";
       return;
     }
 
-
-
     todayData.forEach(loc => {
 
       const block = document.createElement("div");
-
-      block.style.marginBottom = "30px";
-      block.style.padding = "16px";
-      block.style.border = "1px solid #ddd";
-      block.style.borderRadius = "12px";
-
-
+      block.className = "location-block";
 
       let html = `<h2>${loc.location}</h2>`;
-
-
 
       loc.casts.forEach(name => {
 
         const url = CAST_DICT[name];
 
         if (!url) {
-          html += `<p>${name}（未設定）</p>`;
+          html += `<p>${name}（未登録）</p>`;
           return;
         }
 
         html += `
-          <div style="margin-bottom:20px;">
-            <h3 style="margin:8px 0;">${name}</h3>
-            <iframe
-              src="${url}"
-              style="width:100%; height:400px; border:none; border-radius:8px;"
-            ></iframe>
+          <div class="cast">
+            <h3>${name}</h3>
+            <iframe src="${url}"></iframe>
           </div>
         `;
       });
 
-
-
       block.innerHTML = html;
       area.appendChild(block);
-
     });
 
+  })
+  .catch(err => {
+    console.error(err);
+    document.getElementById("schedule-area").innerHTML =
+      "<p>データ取得に失敗しました</p>";
   });
 
-  console.log("RAW FIRST ROW:", rows[0]);
-console.log("PARSED DATA:", data);
-console.log("TODAY:", today);
-
 </script>
+
+</body>
+</html>
