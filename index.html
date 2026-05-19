@@ -68,7 +68,7 @@
 <div id="schedule-area" style="margin-top:40px;"></div>
 
 <script>
-//
+
 const CAST_DICT = {
   "MAAYA": "https://www.canva.com/design/DAHKEvpK2hk/pFVKh--tI0O1TqFShAN6tA/view",
   "NAKO": "https://www.canva.com/design/DAHKEj4Qwf0/BpbRYJCz2i66K8OdyhcLcA/view",
@@ -76,37 +76,72 @@ const CAST_DICT = {
   "YU": "https://www.canva.com/design/DAHKEqQ7D1U/q9OnBGdS0_5P-hdb5xSJKw/view",
 };
 
-//今日の日付
-const today = new Date().toISOString().split("T")[0];
+
+
+// ★ 日付フォーマット統一関数（ここが重要）
+function normalizeDate(value) {
+  if (!value) return null;
+
+  const d = new Date(value);
+
+  if (!isNaN(d.getTime())) {
+    return d.toLocaleDateString("sv-SE", {
+      timeZone: "Asia/Tokyo"
+    });
+  }
+
+  return value.toString().replace(/\//g, "-");
+}
+
+
+
+// 今日の日付（統一済み）
+const today = normalizeDate(
+  new Date().toLocaleDateString("sv-SE", {
+    timeZone: "Asia/Tokyo"
+  })
+);
+
+
 
 const SHEET_URL =
   "https://docs.google.com/spreadsheets/d/1wJrWj4cK01nAZmx9hFQJsml3Za77jlADrGAmyOfqfBM/gviz/tq?tqx=out:json";
+
+
 
 fetch(SHEET_URL)
   .then(res => res.text())
   .then(text => {
 
-    // Google特有の余計な文字を除去
+    // Google特有の余計なラッパー削除
     const json = JSON.parse(text.substring(47).slice(0, -2));
 
     const rows = json.table.rows;
 
-    // データ整形
+    // データ整形（ここで日付も統一）
     const data = rows.map(r => ({
-      date: r.c[0]?.v,
+      date: normalizeDate(r.c[0]?.v),
       location: r.c[1]?.v,
       casts: [r.c[2]?.v, r.c[3]?.v, r.c[4]?.v].filter(Boolean)
     }));
 
+
+
     // 今日だけ抽出
     const todayData = data.filter(d => d.date === today);
 
+
+
     const area = document.getElementById("schedule-area");
+
+
 
     if (todayData.length === 0) {
       area.innerHTML = "<p>No cast today</p>";
       return;
     }
+
+
 
     todayData.forEach(loc => {
 
@@ -117,11 +152,20 @@ fetch(SHEET_URL)
       block.style.border = "1px solid #ddd";
       block.style.borderRadius = "12px";
 
+
+
       let html = `<h2>${loc.location}</h2>`;
+
+
 
       loc.casts.forEach(name => {
 
         const url = CAST_DICT[name];
+
+        if (!url) {
+          html += `<p>${name}（未設定）</p>`;
+          return;
+        }
 
         html += `
           <div style="margin-bottom:20px;">
@@ -134,9 +178,13 @@ fetch(SHEET_URL)
         `;
       });
 
+
+
       block.innerHTML = html;
       area.appendChild(block);
+
     });
 
   });
+
 </script>
