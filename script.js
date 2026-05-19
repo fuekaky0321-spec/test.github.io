@@ -32,7 +32,7 @@ window.addEventListener("DOMContentLoaded", () => {
       const rows = json.table.rows;
 
       const data = rows.map(r => ({
-        date: r.c[0]?.v,
+        date: r.c[0]?.f,
         location: r.c[1]?.v,
         casts: [r.c[2]?.v, r.c[3]?.v, r.c[4]?.v].filter(Boolean)
       }));
